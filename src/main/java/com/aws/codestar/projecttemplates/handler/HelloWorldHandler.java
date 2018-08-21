@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.aws.codestar.projecttemplates.GatewayResponse;
 import org.json.JSONObject;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,6 +18,6 @@ public class HelloWorldHandler implements RequestHandler<Object, Object> {
     public Object handleRequest(final Object input, final Context context) {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        return new GatewayResponse(new JSONObject().put("Output", "Hello World!").toString(), headers, 200);
+        return new GatewayResponse(new JSONObject().put("Output", "Hello World at "+ LocalDateTime.now() +" !").toString(), headers, 200);
     }
 }
