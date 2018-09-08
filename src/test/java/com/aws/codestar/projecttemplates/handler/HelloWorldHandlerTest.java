@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -19,7 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class HelloWorldHandlerTest {
 
     private static final String EXPECTED_CONTENT_TYPE = "application/json";
-    private static final String EXPECTED_RESPONSE_VALUE = "Hello World!";
+    private static final String EXPECTED_RESPONSE_START = "Hello World at";
+    private static final String EXPECTED_RESPONSE_END = "!";
     private static final int EXPECTED_STATUS_CODE_SUCCESS = 200;
 
     // A mock class for com.amazonaws.services.lambda.runtime.Context
@@ -56,7 +58,8 @@ public class HelloWorldHandlerTest {
 
         // Verify the response obtained matches the values we expect.
         JSONObject jsonObjectFromResponse = new JSONObject(response.getBody());
-        assertEquals(EXPECTED_RESPONSE_VALUE, jsonObjectFromResponse.get("Output"));
+        assertTrue(((String)jsonObjectFromResponse.get("Output")).startsWith(EXPECTED_RESPONSE_START));
+        assertTrue(((String)jsonObjectFromResponse.get("Output")).endsWith(EXPECTED_RESPONSE_END));
         assertEquals(EXPECTED_CONTENT_TYPE, response.getHeaders().get("Content-Type"));
         assertEquals(EXPECTED_STATUS_CODE_SUCCESS, response.getStatusCode());
     }
