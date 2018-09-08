@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -60,6 +61,7 @@ public class HelloWorldHandlerTest {
         JSONObject jsonObjectFromResponse = new JSONObject(response.getBody());
         assertTrue(((String)jsonObjectFromResponse.get("Output")).startsWith(EXPECTED_RESPONSE_START));
         assertTrue(((String)jsonObjectFromResponse.get("Output")).endsWith(EXPECTED_RESPONSE_END));
+        assertNotNull(jsonObjectFromResponse.get("input"));
         assertEquals(EXPECTED_CONTENT_TYPE, response.getHeaders().get("Content-Type"));
         assertEquals(EXPECTED_STATUS_CODE_SUCCESS, response.getStatusCode());
     }
