@@ -18,7 +18,7 @@ import java.util.*;
 /**
  * Handler for requests to Lambda function.
  */
-public class WordCounter implements RequestHandler<WordCounterInput, WordCounterResponse> {
+public class WordCounter implements RequestHandler<Object, WordCounterResponse> {
 
     private static final String TARGET_METHOD_GET = "GET";
     private static final String TARGET_METHOD_POST = "POST";
@@ -29,31 +29,18 @@ public class WordCounter implements RequestHandler<WordCounterInput, WordCounter
     private static final String TARGET_URL = "url";
 
 
-    /*
-    JSONObject headers = input.getJSONObject(HEADERS);
-        switch(inputObject.getString(QUERY_METHOD)){
+    public WordCounterResponse handleRequest(final Object inputObject, final Context context) {
+        context.getLogger().log("Input Class: " + inputObject.getClass().getName());
+        context.getLogger().log("Input      : " + inputObject.toString());
+        JSONObject input = new JSONObject(inputObject.toString());
+        JSONObject headers = input.getJSONObject(HEADERS);
+        switch(input.getString(QUERY_METHOD)){
             case TARGET_METHOD_GET:
-                JSONObject queryParams = inputObject.getJSONObject(QUERY_PARAMS);
+                JSONObject queryParams = input.getJSONObject(QUERY_PARAMS);
                 return handleGet(headers, queryParams.getString("url"));
             case TARGET_METHOD_POST:
-                String body = inputObject.get("body").toString();
+                String body = input.get("body").toString();
                 return handlePost(headers, body);
-            default:
-                return new WordCounterResponse(
-                        new JSONObject()
-                                .put("error", "Unsupported method, use GET, POST.")
-                                .toString(),
-                        Collections.emptyMap(),
-                        HttpStatus.METHOD_NOT_ALLOWED.value());
-        }
-     */
-    public WordCounterResponse handleRequest(final WordCounterInput input, final Context context) {
-        Map<String,String> headers = input.getHeaders();
-        switch(input.getHttpMethod()){
-            case TARGET_METHOD_GET:
-                return handleGet(headers, input.getUrl());
-            case TARGET_METHOD_POST:
-                return handlePost(headers, input.getBody());
             default:
                 return new WordCounterResponse(
                         new JSONObject()
@@ -64,11 +51,11 @@ public class WordCounter implements RequestHandler<WordCounterInput, WordCounter
         }
     }
 
-    private WordCounterResponse handlePost(Map<String,String> headers, String source) {
+    private WordCounterResponse handlePost(JSONObject headers, String source) {
         try{
-            return countWords(source, headers.getOrDefault(HttpHeaders.CONTENT_LOCATION, "N/A"),
-                    headers.getOrDefault(HttpHeaders.CONTENT_ENCODING, "N/A"),
-                    headers.getOrDefault(HttpHeaders.CONTENT_TYPE, "N/A"));
+            return countWords(source, headers.optString(HttpHeaders.CONTENT_LOCATION, "N/A"),
+                    headers.optString(HttpHeaders.CONTENT_ENCODING, "N/A"),
+                    headers.optString(HttpHeaders.CONTENT_TYPE, "N/A"));
         } catch(Exception e){
             return new WordCounterResponse(
                     new JSONObject()
@@ -79,7 +66,7 @@ public class WordCounter implements RequestHandler<WordCounterInput, WordCounter
         }
     }
 
-    private WordCounterResponse handleGet(Map<String,String> headers, String urlString) {
+    private WordCounterResponse handleGet(JSONObject headers, String urlString) {
         try{
             URL url = new URL(urlString);
             String source = "";
