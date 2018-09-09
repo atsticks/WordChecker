@@ -1,27 +1,24 @@
-package com.aws.codestar.projecttemplates.handler;
+package com.github.atsticks.handler.wordcount;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 
-import com.aws.codestar.projecttemplates.GatewayResponse;
 import org.json.JSONObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
 
-import javax.validation.constraints.Null;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
  * Handler for requests to Lambda function.
  */
-public class HelloWorldHandler implements RequestHandler<Object, Object> {
+public class WordCounter implements RequestHandler<WordCounterInput, WordCounterResponse> {
 
     private static final String TARGET_METHOD_GET = "GET";
     private static final String TARGET_METHOD_POST = "POST";
@@ -32,10 +29,8 @@ public class HelloWorldHandler implements RequestHandler<Object, Object> {
     private static final String TARGET_URL = "url";
 
 
-    public Object handleRequest(final Object input, final Context context) {
-        JSONObject inputObject = new JSONObject(input.toString());
-
-        JSONObject headers = inputObject.getJSONObject(HEADERS);
+    /*
+    JSONObject headers = input.getJSONObject(HEADERS);
         switch(inputObject.getString(QUERY_METHOD)){
             case TARGET_METHOD_GET:
                 JSONObject queryParams = inputObject.getJSONObject(QUERY_PARAMS);
@@ -44,7 +39,23 @@ public class HelloWorldHandler implements RequestHandler<Object, Object> {
                 String body = inputObject.get("body").toString();
                 return handlePost(headers, body);
             default:
-                return new GatewayResponse(
+                return new WordCounterResponse(
+                        new JSONObject()
+                                .put("error", "Unsupported method, use GET, POST.")
+                                .toString(),
+                        Collections.emptyMap(),
+                        HttpStatus.METHOD_NOT_ALLOWED.value());
+        }
+     */
+    public WordCounterResponse handleRequest(final WordCounterInput input, final Context context) {
+        Map<String,String> headers = input.getHeaders();
+        switch(input.getHttpMethod()){
+            case TARGET_METHOD_GET:
+                return handleGet(headers, input.getUrl());
+            case TARGET_METHOD_POST:
+                return handlePost(headers, input.getBody());
+            default:
+                return new WordCounterResponse(
                         new JSONObject()
                                 .put("error", "Unsupported method, use GET, POST.")
                                 .toString(),
@@ -53,13 +64,13 @@ public class HelloWorldHandler implements RequestHandler<Object, Object> {
         }
     }
 
-    private GatewayResponse handlePost(JSONObject headers, String source) {
+    private WordCounterResponse handlePost(Map<String,String> headers, String source) {
         try{
-            return countWords(source, headers.optString(HttpHeaders.CONTENT_LOCATION, "N/A"),
-                    headers.optString(HttpHeaders.CONTENT_ENCODING, "N/A"),
-                    headers.optString(HttpHeaders.CONTENT_TYPE, "N/A"));
+            return countWords(source, headers.getOrDefault(HttpHeaders.CONTENT_LOCATION, "N/A"),
+                    headers.getOrDefault(HttpHeaders.CONTENT_ENCODING, "N/A"),
+                    headers.getOrDefault(HttpHeaders.CONTENT_TYPE, "N/A"));
         } catch(Exception e){
-            return new GatewayResponse(
+            return new WordCounterResponse(
                     new JSONObject()
                             .put("error", e.getMessage())
                             .toString(),
@@ -68,7 +79,7 @@ public class HelloWorldHandler implements RequestHandler<Object, Object> {
         }
     }
 
-    private GatewayResponse handleGet(JSONObject headerObject, String urlString) {
+    private WordCounterResponse handleGet(Map<String,String> headers, String urlString) {
         try{
             URL url = new URL(urlString);
             String source = "";
@@ -90,14 +101,14 @@ public class HelloWorldHandler implements RequestHandler<Object, Object> {
             source = bos.toString(encoding);
             return countWords(source, urlString, encoding, contentType);
         } catch (MalformedURLException e) {
-            return new GatewayResponse(
+            return new WordCounterResponse(
                     new JSONObject()
                             .put("error", "Malformed url: " + urlString)
                             .toString(),
                     Collections.emptyMap(),
                     HttpStatus.NOT_FOUND.value());
         } catch(Exception e){
-            return new GatewayResponse(
+            return new WordCounterResponse(
                     new JSONObject()
                             .put("error", e.getMessage())
                             .toString(),
@@ -106,7 +117,7 @@ public class HelloWorldHandler implements RequestHandler<Object, Object> {
         }
     }
 
-    private GatewayResponse countWords(String source, @Nullable String urlString, @Nullable String encoding, @Nullable String contentType) {
+    private WordCounterResponse countWords(String source, @Nullable String urlString, @Nullable String encoding, @Nullable String contentType) {
         int inputLength = source.length();
         source = source.trim();
         int totalLength = 0;
@@ -135,7 +146,7 @@ public class HelloWorldHandler implements RequestHandler<Object, Object> {
         }
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-        return new GatewayResponse(
+        return new WordCounterResponse(
                 new JSONObject()
                         .put("url", urlString)
                         .put("content-type", contentType==null?"N/A":contentType)
