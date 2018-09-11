@@ -41,7 +41,7 @@ public class WordCounter implements RequestHandler<Map<String,Object>, WordCount
             }else {
                 return new WordCounterResponse(
                         new JSONObject()
-                                .put("error", "Unsupported method, use GET, POST.")
+                                .put("error", "Use GET, POST with 'text' or 'url' as parameter (GET) or JSON payload(POST).")
                                 .toString(),
                         Collections.emptyMap(),
                         HttpStatus.METHOD_NOT_ALLOWED.value());
